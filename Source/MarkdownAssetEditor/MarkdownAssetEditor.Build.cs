@@ -6,10 +6,10 @@ public class MarkdownAssetEditor : ModuleRules
 {
 	public MarkdownAssetEditor( ReadOnlyTargetRules Target) : base(Target)
 	{
-		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+        PublicDependencyModuleNames.AddRange(new string[] { "Projects" });
+        PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
         DynamicallyLoadedModuleNames.AddRange( new string[] {
-            "AssetTools",
             "MainFrame",
         });
 
@@ -39,6 +39,10 @@ public class MarkdownAssetEditor : ModuleRules
             "DeveloperSettings",
             "ToolMenus",
             "AssetDefinition",
+            "UnrealEd",
+            "ContentBrowserData", 
+            "GameProjectGeneration",
+            "AssetTools",
         });
 
         PrivateIncludePathModuleNames.AddRange( new string[] {

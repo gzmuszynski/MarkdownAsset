@@ -11,6 +11,7 @@
 #include "Toolkits/AssetEditorToolkit.h"
 
 #include "MarkdownAssetEditorSettings.h"
+#include "ContentBrowser/MarkdownContentBrowserDataSource.h"
 #include "DeveloperSettings/MarkdownAssetDeveloperSettings.h"
 #include "Toolkits/AssetEditorToolkitMenuContext.h"
 #include "HelperFunctions/MarkdownAssetEditorStatics.h"
@@ -22,12 +23,17 @@ void FMarkdownAssetEditorModule::StartupModule()
 {
 	RegisterMenuExtensions();
 	RegisterSettings();
+	auto ContentBrowserSubsystem = GEditor->GetEditorSubsystem<UContentBrowserDataSubsystem>();
+	MarkdownDataSource.Reset(NewObject<UMarkdownContentBrowserDataSource>(GetTransientPackage(), "MarkdownData"));
+	MarkdownDataSource->Initialize();
+	ContentBrowserSubsystem->ActivateDataSource ( FName("MarkdownData"));
 }
 
 void FMarkdownAssetEditorModule::ShutdownModule()
 {
 	UnregisterMenuExtensions();
 	UnregisterSettings();
+	MarkdownDataSource.Reset();
 }
 
 void FMarkdownAssetEditorModule::RegisterMenuExtensions()

@@ -4,6 +4,9 @@
 #include "CoreMinimal.h"
 #include "Modules/ModuleInterface.h"
 
+class UMarkdownContentBrowserDataSource;
+class UAssetEditorToolkitMenuContext;
+
 class MARKDOWNASSETEDITOR_API FMarkdownAssetEditorModule : public IModuleInterface 
 {
 	
@@ -26,4 +29,7 @@ protected:
 
 	void EditorAction_OpenProjectDocumentation();
 	void EditorAction_OpenAssetDocumentation(UAssetEditorToolkitMenuContext* ExecutionContext);
+
+private:
+	TStrongObjectPtr<UMarkdownContentBrowserDataSource> MarkdownDataSource;
 };

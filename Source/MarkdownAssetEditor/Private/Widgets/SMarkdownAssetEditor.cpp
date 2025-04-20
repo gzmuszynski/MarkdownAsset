@@ -47,7 +47,7 @@ void SMarkdownAssetEditor::Construct( const FArguments& InArgs, UMarkdownAsset* 
 
 	WebBrowser = SAssignNew( WebBrowser, SWebBrowserView )
 		.InitialURL( URL )
-		.BackgroundColor( Settings->bDarkSkin ? FColor( 0.1f, 0.1f, 0.1f, 1.0f ) : FColor( 1.0f, 1.0f, 1.0f, 1.0f ) )
+		.BackgroundColor( Settings->bDarkSkin ? FLinearColor( 0.1f, 0.1f, 0.1f, 1.0f ).ToFColor(true) : FLinearColor( 1.0f, 1.0f, 1.0f, 1.0f ).ToFColor(true) )
 		.OnConsoleMessage( this, &SMarkdownAssetEditor::HandleConsoleMessage )
 	;
 
