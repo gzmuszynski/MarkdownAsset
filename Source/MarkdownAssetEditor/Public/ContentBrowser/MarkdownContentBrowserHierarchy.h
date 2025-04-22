@@ -1,10 +1,20 @@
 #pragma once
+#include "MarkdownContentBrowserHierarchy.generated.h"
+
+
+UCLASS()
+class MARKDOWNASSETEDITOR_API UMarkdownFile : public UObject
+{
+	GENERATED_BODY()
+public:
+	FName FilePath;
+};
 
 struct FMarkdownContentBrowserHierarchyNode
 {
-	TSet<UClass*>& GetClasses()
+	TSet<UMarkdownFile*>& GetMDFiles()
 	{
-		return Classes;
+		return MDFiles;
 	}
 
 	TMap<FName, TSharedPtr<FMarkdownContentBrowserHierarchyNode>>& GetChildren()
@@ -12,7 +22,7 @@ struct FMarkdownContentBrowserHierarchyNode
 		return Children;
 	}
 
-	TSet<UClass*> Classes;
+	TSet<UMarkdownFile*> MDFiles;
 
 	TMap<FName, TSharedPtr<FMarkdownContentBrowserHierarchyNode>> Children;
 };
@@ -26,18 +36,18 @@ public:
 
 	static void GetMatchingFolders(const TSharedPtr<FMarkdownContentBrowserHierarchyNode>& InNode, TArray<FName>& OutFolders);
 
-	static void GetMatchingClasses(const TSharedPtr<FMarkdownContentBrowserHierarchyNode>& InNode, TArray<UClass*>& OutClasses);
+	static void GetMatchingMDFiles(const TSharedPtr<FMarkdownContentBrowserHierarchyNode>& InNode, TArray<UMarkdownFile*>& OutFiles);
 
 	TArray<FName> GetMatchingFolders(const FName& InPath, const bool bRecurse = false) const;
 
-	TArray<UClass*> GetMatchingClasses(const FName& InPath, const bool bRecurse = false) const;
+	TArray<UMarkdownFile*> GetMatchingMDFiles(const FName& InPath, const bool bRecurse = false) const;
 
 	static FString ConvertInternalPathToFileSystemPath(const FString& InInternalPath);
 
 private:
 	static bool EnumeratePath(const FString& InPath, const TFunctionRef<bool(const FName&)>& InCallback);
 
-	void AddClass(UClass* InClass) const;
+	void AddMDFile(UMarkdownFile* InFile) const;
 
 	void PopulateHierarchy();
 

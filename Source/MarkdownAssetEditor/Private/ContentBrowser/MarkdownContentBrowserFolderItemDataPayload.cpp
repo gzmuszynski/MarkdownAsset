@@ -6,12 +6,14 @@
 #include "Misc/Paths.h"
 #include "AssetThumbnail.h"
 #include "ContentBrowserDataSource.h"
+#include "MarkdownAsset.h"
+#include "ContentBrowser/MarkdownContentBrowserHierarchy.h"
 
 
-FMarkdownContentBrowserFileItemDataPayload::FMarkdownContentBrowserFileItemDataPayload(const FName& InInternalPath, UClass* InClass):
+FMarkdownContentBrowserFileItemDataPayload::FMarkdownContentBrowserFileItemDataPayload(const FName& InInternalPath, UMarkdownFile* InClass):
 	InternalPath(InInternalPath),
-	Class(InClass),
-	AssetData(InClass)
+	MDFile(InClass),
+	AssetData(NewObject<UMarkdownAsset>(GetTransientPackage(), FName(InClass->GetName() + "_Asset")))
 {
 }
 
@@ -20,7 +22,7 @@ bool FMarkdownContentBrowserFileItemDataPayload::GetItemAttribute(const FName& I
 {
 	if (InAttributeKey == ContentBrowserItemAttributes::ItemTypeDisplayName)
 	{
-		OutAttributeValue.SetValue(TEXT("Documentation"));
+		OutAttributeValue.SetValue(TEXT("Markdown Document"));
 
 		return true;
 	}
@@ -33,9 +35,9 @@ const FName& FMarkdownContentBrowserFileItemDataPayload::GetInternalPath() const
 	return InternalPath;
 }
 
-UClass* FMarkdownContentBrowserFileItemDataPayload::GetClass() const
+UMarkdownFile* FMarkdownContentBrowserFileItemDataPayload::GetMDFile() const
 {
-	return Class.Get();
+	return MDFile;
 }
 
 const FAssetData& FMarkdownContentBrowserFileItemDataPayload::GetAssetData() const

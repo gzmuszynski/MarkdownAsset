@@ -7,7 +7,7 @@
 #include "Styling/SlateStyle.h"
 #include "Styling/SlateStyleRegistry.h"
 
-#define IMAGE_BRUSH(RelativePath, ...) FSlateImageBrush(RootToContentDir(RelativePath, TEXT(".png")), __VA_ARGS__)
+#define IMAGE_BRUSH(RelativePath, ...) FSlateImageBrush(FPaths::EngineContentDir() + RelativePath + TEXT(".png"), __VA_ARGS__)
 #define BOX_BRUSH(RelativePath, ...) FSlateBoxBrush(RootToContentDir(RelativePath, TEXT(".png")), __VA_ARGS__)
 #define BORDER_BRUSH(RelativePath, ...) FSlateBorderBrush(RootToContentDir(RelativePath, TEXT(".png")), __VA_ARGS__)
 #define TTF_FONT(RelativePath, ...) FSlateFontInfo(RootToContentDir(RelativePath, TEXT(".ttf")), __VA_ARGS__)
@@ -23,8 +23,9 @@ public:
 		const FVector2D Icon64x64( 64.0f, 64.0f );
 
 		SetContentRoot( IPluginManager::Get().FindPlugin( "MarkdownAsset" )->GetContentDir() );
-		Set( "ClassIcon.MarkdownAsset", new IMAGE_BRUSH( "markdown_16", Icon16x16 ) );
-		Set( "ClassThumbnail.MarkdownAsset", new IMAGE_BRUSH( "markdown_64", Icon64x64 ) );
+		
+		Set( "ClassIcon.MarkdownAsset", new IMAGE_BRUSH( "Editor/Slate/Icons/AssetIcons/Note_16x", Icon16x16 ) );
+		Set( "ClassThumbnail.MarkdownAsset", new IMAGE_BRUSH( "Editor/Slate/Icons/AssetIcons/Note_64x", Icon64x64 ) );
 
 		FSlateStyleRegistry::RegisterSlateStyle( *this );
 	}

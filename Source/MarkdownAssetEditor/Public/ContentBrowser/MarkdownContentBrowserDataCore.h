@@ -3,6 +3,7 @@
 #pragma once
 
 #include "ContentBrowserItemData.h"
+#include "MarkdownContentBrowserHierarchy.h"
 
 class FMarkdownContentBrowserFileItemDataPayload;
 class FMarkdownContentBrowserFolderItemDataPayload;
@@ -22,7 +23,8 @@ namespace MarkdownContentBrowserData
 
 	MARKDOWNASSETEDITOR_API FContentBrowserItemData CreateClassFolderItem(UContentBrowserDataSource* InOwnerDataSource, const FName InVirtualPath, const FName InFolderPath, const bool bIsFromPlugin);
 
-	MARKDOWNASSETEDITOR_API FContentBrowserItemData CreateClassFileItem(UContentBrowserDataSource* InOwnerDataSource, const FName InVirtualPath, const FName InClassPath, UClass* InClass, const bool bIsFromPlugin);
+	MARKDOWNASSETEDITOR_API FContentBrowserItemData CreateClassFileItem(UContentBrowserDataSource* InOwnerDataSource, const FName InVirtualPath, const FName InClassPath, UMarkdownFile*
+	                                                                    InClass, const bool bIsFromPlugin);
 
 	MARKDOWNASSETEDITOR_API TSharedPtr<const FMarkdownContentBrowserFolderItemDataPayload> GetClassFolderItemPayload(const UContentBrowserDataSource* InOwnerDataSource, const FContentBrowserItemData& InItem);
 

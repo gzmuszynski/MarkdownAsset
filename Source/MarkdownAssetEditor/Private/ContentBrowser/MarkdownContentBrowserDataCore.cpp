@@ -137,7 +137,7 @@ FContentBrowserItemData CreateClassFileItem(
 	UContentBrowserDataSource* InOwnerDataSource,
 	const FName InVirtualPath,
 	FName InClassPath,
-	UClass* InClass,
+	UMarkdownFile* InClass,
 	const bool bIsFromPlugin)
 {
 	return FContentBrowserItemData(InOwnerDataSource,
@@ -259,10 +259,10 @@ bool EditClassFileItems(IAssetTypeActions* InClassTypeActions, TArrayView<const 
 	TArray<UObject*> ClassList;
 	for (const TSharedRef<const FMarkdownContentBrowserFileItemDataPayload>& ClassPayload : InClassPayloads)
 	{
-		if (UClass* ClassPtr = ClassPayload->GetClass())
+		/*if (FName ClassPtr = ClassPayload->GetClass())
 		{
 			ClassList.Add(ClassPtr);
-		}
+		}*/
 	}
 
 	if (ClassList.Num() > 0)

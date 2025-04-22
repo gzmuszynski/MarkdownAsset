@@ -1,5 +1,7 @@
 #include "ContentBrowser/MarkdownContentBrowserHierarchy.h"
 
+#include "FileHelpers.h"
+
 #define DYNAMIC_ROOT_INTERNAL_PATH FString(TEXT("/Documentation"))
 
 #define DYNAMIC_ROOT_VIRTUAL_PATH FString(TEXT("/All")) / DYNAMIC_ROOT_INTERNAL_PATH
@@ -57,21 +59,21 @@ void FMarkdownContentBrowserHierarchy::GetMatchingFolders(const TSharedPtr<FMark
 	}
 }
 
-void FMarkdownContentBrowserHierarchy::GetMatchingClasses(const TSharedPtr<FMarkdownContentBrowserHierarchyNode>& InNode, TArray<UClass*>& OutClasses)
+void FMarkdownContentBrowserHierarchy::GetMatchingMDFiles(const TSharedPtr<FMarkdownContentBrowserHierarchyNode>& InNode, TArray<UMarkdownFile*>& OutFiles)
 {
-	for (const auto& Class : InNode->GetClasses())
+	for (const auto& Class : InNode->GetMDFiles())
 	{
-		OutClasses.Add(Class);
+		OutFiles.Add(Class);
 	}
 
 	for (const auto& [PLACEHOLDER, Value] : InNode->GetChildren())
 	{
-		for (const auto& Class : Value->GetClasses())
+		for (const auto& Class : Value->GetMDFiles())
 		{
-			OutClasses.Add(Class);
+			OutFiles.Add(Class);
 		}
 
-		GetMatchingClasses(Value, OutClasses);
+		GetMatchingMDFiles(Value, OutFiles);
 	}
 }
 
@@ -99,9 +101,10 @@ TArray<FName> FMarkdownContentBrowserHierarchy::GetMatchingFolders(const FName& 
 	return MatchingFolders;
 }
 
-TArray<UClass*> FMarkdownContentBrowserHierarchy::GetMatchingClasses(const FName& InPath, const bool bRecurse) const
+TArray<UMarkdownFile*> FMarkdownContentBrowserHierarchy::GetMatchingMDFiles(
+	const FName& InPath, const bool bRecurse) const
 {
-	TArray<UClass*> MatchingClasses;
+	TArray<UMarkdownFile*> MatchingClasses;
 
 	const auto Node = FindNode(InPath);
 
@@ -110,7 +113,7 @@ TArray<UClass*> FMarkdownContentBrowserHierarchy::GetMatchingClasses(const FName
 		return MatchingClasses;
 	}
 
-	for (const auto& Class : Node->GetClasses())
+	for (const auto& Class : Node->GetMDFiles())
 	{
 		MatchingClasses.Add(Class);
 	}
@@ -119,7 +122,7 @@ TArray<UClass*> FMarkdownContentBrowserHierarchy::GetMatchingClasses(const FName
 	{
 		for (const auto& [PLACEHOLDER, Value] : Node->GetChildren())
 		{
-			GetMatchingClasses(Value, MatchingClasses);
+			GetMatchingMDFiles(Value, MatchingClasses);
 		}
 	}
 
@@ -147,7 +150,7 @@ FString FMarkdownContentBrowserHierarchy::ConvertInternalPathToFileSystemPath(co
 		return FString();
 	}
 
-	return FPaths::ConvertRelativePathToFull(FPaths::ProjectDir() / "Documentation") / FileSystemPath;
+	return FPaths::ConvertRelativePathToFull(FPaths::ProjectDir() + DYNAMIC_ROOT_INTERNAL_PATH) / FileSystemPath;
 }
 
 bool FMarkdownContentBrowserHierarchy::EnumeratePath(const FString& InPath, const TFunctionRef<bool(const FName&)>& InCallback)
@@ -183,46 +186,62 @@ bool FMarkdownContentBrowserHierarchy::EnumeratePath(const FString& InPath, cons
 	return true;
 }
 
-void FMarkdownContentBrowserHierarchy::AddClass(UClass* InClass) const
+void FMarkdownContentBrowserHierarchy::AddMDFile(UMarkdownFile* InFile) const
 {
-	if (InClass == nullptr)
+	if (InFile == nullptr)
 	{
 		return;
 	}
 
-	/*if (const auto& Path = FPaths::GetPath(FDynamicGenerator::GetDynamicNormalizeFile(InClass));
-		FUnrealCSharpFunctionLibrary::IsRootPath(Path))
+	FString Path = InFile->FilePath.ToString();
+	const auto& RelativePath = Path.Left(Path.Find("/", ESearchCase::IgnoreCase,
+		ESearchDir::FromEnd));
+
+	auto Node = Root;
+
+	if (!RelativePath.IsEmpty())
 	{
-		const auto& RelativePath = Path.RightChop(
-			FPaths::ConvertRelativePathToFull(FPaths::ProjectDir() / "Documentation").Len());
-
-		auto Node = Root;
-
 		EnumeratePath(RelativePath,
-		              [&Node](const FName& InInternalPath)
-		              {
-			              auto& Child = Node->GetChildren().FindOrAdd(InInternalPath);
-
-			              if (!Child.IsValid())
-			              {
-				              Child = MakeShared<FMarkdownContentBrowserHierarchyNode>();
-			              }
-
-			              Node = Child;
-
-			              return true;
-		              });
-
-		Node->GetClasses().Add(InClass);
-	}*/
+            		[&Node](const FName& InInternalPath)
+            		{
+            			auto& Child = Node->GetChildren().FindOrAdd(InInternalPath);
+        
+            			if (!Child.IsValid())
+            			{
+            			    Child = MakeShared<FMarkdownContentBrowserHierarchyNode>();
+            			}
+        
+            			Node = Child;
+        
+            			return true;
+            		});
+	}
+	
+	Node->GetMDFiles().Add(InFile);
 }
 
 void FMarkdownContentBrowserHierarchy::PopulateHierarchy()
 {
 	Root = MakeShared<FMarkdownContentBrowserHierarchyNode>();
 
-	/*for (const auto& Class : FDynamicClassGenerator::GetDynamicClasses())
+	FString Path = FPaths::ProjectDir() + DYNAMIC_ROOT_INTERNAL_PATH;
+	TArray<FString> Files;
+	IFileManager::Get().FindFilesRecursive(Files, *Path , TEXT("*.md"), true, false);
+	for (FString File : Files)
 	{
-		AddClass(Class);
-	}*/
+		File.RemoveFromStart(Path);
+		FString ObjectName = File;
+		if (ObjectName.Contains("/"))
+		{
+			int Index;
+			ObjectName.FindLastChar('/', Index);
+			ObjectName.RightChopInline(Index+1);
+		}
+		int Index = ObjectName.Find(".md");
+		ObjectName.LeftInline(Index);
+		
+		UMarkdownFile* MDFile = NewObject<UMarkdownFile>(GetTransientPackage(), FName(ObjectName));
+		MDFile->FilePath = FName(File);
+		AddMDFile(MDFile);
+	}
 }

@@ -14,7 +14,7 @@ struct FMarkdownContentBrowserDataFilter
 	GENERATED_BODY()
 
 	UPROPERTY()
-	TSet<TObjectPtr<UClass>> Classes;
+	TSet<UMarkdownFile*> Classes;
 
 	UPROPERTY()
 	TSet<FName> Folders;
@@ -89,7 +89,7 @@ private:
 
 	static bool IsRootInternalPath(const FName& InPath);
 
-	static FString GetVirtualPath(const UClass* InClass);
+	static FString GetVirtualPath(FName InClass);
 
 	TSharedPtr<const FMarkdownContentBrowserFileItemDataPayload> GetFileItemDataPayload(
 		const FContentBrowserItemData& InItemData) const;
@@ -99,7 +99,7 @@ private:
 
 	FContentBrowserItemData CreateFolderItem(const FName& InFolderPath);
 
-	FContentBrowserItemData CreateFileItem(UClass* InClass);
+	FContentBrowserItemData CreateFileItem(UMarkdownFile* InFile);
 
 	bool GetClassPaths(const TArrayView<const FCollectionNameType>& InCollections,
 	                   const bool bIncludeChildCollections,

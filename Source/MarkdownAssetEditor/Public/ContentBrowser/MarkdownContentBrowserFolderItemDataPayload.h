@@ -5,6 +5,8 @@
 #include "ContentBrowserItemData.h"
 #include "AssetRegistry/AssetData.h"
 
+class UMarkdownFile;
+
 class FMarkdownContentBrowserFolderItemDataPayload final : public IContentBrowserItemDataPayload
 {
 public:
@@ -25,13 +27,13 @@ private:
 class FMarkdownContentBrowserFileItemDataPayload final : public IContentBrowserItemDataPayload
 {
 public:
-	explicit FMarkdownContentBrowserFileItemDataPayload(const FName& InInternalPath, UClass* InClass);
+	explicit FMarkdownContentBrowserFileItemDataPayload(const FName& InInternalPath, UMarkdownFile* InClass);
 
 	static bool GetItemAttribute(const FName& InAttributeKey, FContentBrowserItemDataAttributeValue& OutAttributeValue);
 
 	const FName& GetInternalPath() const;
 
-	UClass* GetClass() const;
+	UMarkdownFile* GetMDFile() const;
 
 	const FAssetData& GetAssetData() const;
 
@@ -40,7 +42,7 @@ public:
 private:
 	FName InternalPath;
 
-	TWeakObjectPtr<UClass> Class;
+	UMarkdownFile* MDFile;
 
 	FAssetData AssetData;
 };

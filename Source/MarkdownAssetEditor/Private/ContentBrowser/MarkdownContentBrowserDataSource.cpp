@@ -273,7 +273,7 @@ void UMarkdownContentBrowserDataSource::CompileFilter(const FName InPath, const 
 
 	if (bIncludeFiles)
 	{
-		if (const auto& MatchingClasses = MarkdownHierarchy->GetMatchingClasses(
+		if (const auto& MatchingClasses = MarkdownHierarchy->GetMatchingMDFiles(
 			ConvertInternalPath, InFilter.bRecursivePaths); !MatchingClasses.IsEmpty())
 		{
 #if UE_F_TOP_LEVEL_ASSET_PATH
@@ -309,7 +309,7 @@ void UMarkdownContentBrowserDataSource::CompileFilter(const FName InPath, const 
 #if UE_F_TOP_LEVEL_ASSET_PATH
 						FTopLevelAssetPath(MatchingClass));
 #else
-						*MatchingClass->GetPathName());
+						*MatchingClass->GetFName().ToString());
 #endif
 
 				const auto bPassesPermissionCheck = !ClassPermissionList ||
@@ -317,7 +317,7 @@ void UMarkdownContentBrowserDataSource::CompileFilter(const FName InPath, const 
 #if UE_F_TOP_LEVEL_ASSET_PATH
 						MatchingClass->GetClassPathName().ToString());
 #else
-						MatchingClass->GetFName());
+						MatchingClass->GetFName().ToString());
 #endif
 
 				if (bPassesInclusiveFilter && bPassesPermissionCheck)
@@ -333,6 +333,9 @@ void UMarkdownContentBrowserDataSource::EnumerateItemsMatchingFilter(const FCont
                                                       TFunctionRef<bool(FContentBrowserItemData&&)> InCallback)
 {
 	const auto DataFilterList = InFilter.CompiledFilters.Find(this);
+
+	if (!MarkdownHierarchy.IsValid())
+		UpdateHierarchy();
 
 	if (!DataFilterList)
 	{
@@ -392,7 +395,7 @@ void UMarkdownContentBrowserDataSource::EnumerateItemsAtPath(const FName InPath,
 	{
 		if (const auto Node = MarkdownHierarchy->FindNode(InternalPath))
 		{
-			for (const auto Class : Node->GetClasses())
+			for (const auto Class : Node->GetMDFiles())
 			{
 				InCallback(CreateFileItem(Class));
 			}
@@ -407,7 +410,7 @@ bool UMarkdownContentBrowserDataSource::EnumerateItemsForObjects(const TArrayVie
 	{
 		if (const auto Class = Cast<UClass>(Object))
 		{
-			if (!InCallback(CreateFileItem(Class)))
+			if (!InCallback(CreateFileItem({})))
 			{
 				return false;
 			}
@@ -456,7 +459,7 @@ bool UMarkdownContentBrowserDataSource::DoesItemPassFilter(const FContentBrowser
 			{
 				if (const auto FileItemDataPayload = GetFileItemDataPayload(InItem))
 				{
-					return ClassDataFilter->Classes.Contains(FileItemDataPayload->GetClass());
+					return ClassDataFilter->Classes.Contains(FileItemDataPayload->GetMDFile());
 				}
 			}
 		}
@@ -661,7 +664,7 @@ void UMarkdownContentBrowserDataSource::UpdateHierarchy()
 #if UE_U_CONTENT_BROWSER_DATA_SOURCE_NOTIFY_ITEM_DATA_REFRESHED
 	NotifyItemDataRefreshed();
 #else
-	for (const auto& MatchingClass : MarkdownHierarchy->GetMatchingClasses(*DYNAMIC_ROOT_INTERNAL_PATH, true))
+	for (const auto& MatchingClass : MarkdownHierarchy->GetMatchingMDFiles(*DYNAMIC_ROOT_INTERNAL_PATH, true))
 	{
 		QueueItemDataUpdate(FContentBrowserItemDataUpdate::MakeItemAddedUpdate(CreateFileItem(MatchingClass)));
 	}
@@ -678,9 +681,9 @@ bool UMarkdownContentBrowserDataSource::IsRootInternalPath(const FName& InPath)
 	return InPath.ToString().StartsWith(DYNAMIC_ROOT_INTERNAL_PATH);
 }
 
-FString UMarkdownContentBrowserDataSource::GetVirtualPath(const UClass* InClass)
+FString UMarkdownContentBrowserDataSource::GetVirtualPath(const FName InClass)
 {
-	return InClass != nullptr ? DYNAMIC_ROOT_VIRTUAL_PATH / InClass->GetFName().ToString() : FString();
+	return !InClass.IsNone() ? DYNAMIC_ROOT_VIRTUAL_PATH / InClass.ToString() : FString();
 }
 
 TSharedPtr<const FMarkdownContentBrowserFileItemDataPayload> UMarkdownContentBrowserDataSource::GetFileItemDataPayload(
@@ -721,7 +724,7 @@ FContentBrowserItemData UMarkdownContentBrowserDataSource::CreateFolderItem(cons
 	}
 
 	return FContentBrowserItemData(this,
-	                               EContentBrowserItemFlags::Type_Folder | EContentBrowserItemFlags::Category_Class
+	                               EContentBrowserItemFlags::Type_Folder | EContentBrowserItemFlags::Category_Misc
 	                               ,
 	                               VirtualPath,
 	                               *FolderItemName,
@@ -731,15 +734,15 @@ FContentBrowserItemData UMarkdownContentBrowserDataSource::CreateFolderItem(cons
 	);
 }
 
-FContentBrowserItemData UMarkdownContentBrowserDataSource::CreateFileItem(UClass* InClass)
+FContentBrowserItemData UMarkdownContentBrowserDataSource::CreateFileItem(UMarkdownFile* InFile)
 {
 	return FContentBrowserItemData(this,
-	                               EContentBrowserItemFlags::Type_File | EContentBrowserItemFlags::Category_Class,
-	                               *GetVirtualPath(InClass),
-	                               InClass->GetFName(),
+	                               EContentBrowserItemFlags::Type_File | EContentBrowserItemFlags::Category_Misc,
+	                               *GetVirtualPath(*InFile->GetName()),
+	                               *InFile->GetName(),
 	                               FText(),
-	                               MakeShared<FMarkdownContentBrowserFileItemDataPayload>(InClass->GetFName(), InClass)
-	                               , InClass->GetFName()
+	                               MakeShared<FMarkdownContentBrowserFileItemDataPayload>(*InFile->GetName(), InFile)
+	                               , *InFile->GetName()
 	);
 	return {};
 }
