@@ -1,10 +1,53 @@
 #include "ContentBrowser/MarkdownContentBrowserHierarchy.h"
-
+#include "MarkdownAsset.h"
 #include "FileHelpers.h"
 
 #define DYNAMIC_ROOT_INTERNAL_PATH FString(TEXT("/Documentation"))
 
 #define DYNAMIC_ROOT_VIRTUAL_PATH FString(TEXT("/All")) / DYNAMIC_ROOT_INTERNAL_PATH
+
+UMarkdownAsset* UMarkdownFile::GetMarkdownAsset()
+{
+	if (Asset)
+	{
+		return Asset;
+	}
+	FString FullPath = FPaths::ProjectDir() + DYNAMIC_ROOT_INTERNAL_PATH + FilePath.ToString();
+	if (FPaths::FileExists(FullPath))
+	{
+		Asset = NewObject<UMarkdownAsset>(this);
+		FString String;
+		
+		FFileHelper::LoadFileToString(String, *FullPath);
+		
+		Asset->Text = FText::FromString(String);
+		Asset->OnChanged.BindDynamic(this, &UMarkdownFile::OnAssetChanged);
+		return Asset;
+	}
+	return nullptr;
+}
+
+void UMarkdownFile::OnAssetChanged()
+{
+	if (Asset)
+	{
+		FString FullPath = FPaths::ProjectDir() + DYNAMIC_ROOT_INTERNAL_PATH + FilePath.ToString();
+		FFileHelper::SaveStringToFile(Asset->Text.ToString(), *FullPath);
+	}
+}
+
+void FMarkdownContentBrowserHierarchyNode::DestroyUObjects()
+{
+	for (UMarkdownFile* File : MDFiles)
+	{
+		File->MarkAsGarbage();
+	}
+	for (auto [Key,Value] : Children)
+	{
+		Value->DestroyUObjects();
+	}
+}
+
 FMarkdownContentBrowserHierarchy::FMarkdownContentBrowserHierarchy()
 {
 	PopulateHierarchy();
@@ -222,6 +265,10 @@ void FMarkdownContentBrowserHierarchy::AddMDFile(UMarkdownFile* InFile) const
 
 void FMarkdownContentBrowserHierarchy::PopulateHierarchy()
 {
+	if (Root.IsValid())
+	{
+		Root->DestroyUObjects();
+	}
 	Root = MakeShared<FMarkdownContentBrowserHierarchyNode>();
 
 	FString Path = FPaths::ProjectDir() + DYNAMIC_ROOT_INTERNAL_PATH;
@@ -240,7 +287,7 @@ void FMarkdownContentBrowserHierarchy::PopulateHierarchy()
 		int Index = ObjectName.Find(".md");
 		ObjectName.LeftInline(Index);
 		
-		UMarkdownFile* MDFile = NewObject<UMarkdownFile>(GetTransientPackage(), FName(ObjectName));
+		UMarkdownFile* MDFile = NewObject<UMarkdownFile>(GetTransientPackage(), FName(ObjectName), RF_Standalone);
 		MDFile->FilePath = FName(File);
 		AddMDFile(MDFile);
 	}

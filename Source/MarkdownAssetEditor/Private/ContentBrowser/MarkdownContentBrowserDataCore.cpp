@@ -9,6 +9,7 @@
 #include "ContentBrowserDataSource.h"
 #include "IAssetTypeActions.h"
 #include "ContentBrowserDataUtils.h"
+#include "MarkdownAsset.h"
 #include "ContentBrowser/MarkdownContentBrowserFolderItemDataPayload.h"
 #include "UObject/AssetRegistryTagsContext.h"
 
@@ -44,7 +45,7 @@ bool GetUnrealContentRootFromInternalClassPath(const FName InPath, FString& OutU
 	return true;
 }
 
-bool IsEngineClass(const FName InPath)
+bool IsEngineDocumentation(const FName InPath)
 {
 	FString PathStr;
 	if (!GetUnrealContentRootFromInternalClassPath(InPath, PathStr))
@@ -67,7 +68,7 @@ bool IsEngineClass(const FName InPath)
 	return false;
 }
 
-bool IsProjectClass(const FName InPath)
+bool IsProjectDocumentation(const FName InPath)
 {
 	FString PathStr;
 	if (!GetUnrealContentRootFromInternalClassPath(InPath, PathStr))
@@ -90,7 +91,7 @@ bool IsProjectClass(const FName InPath)
 	return false;
 }
 
-bool IsPluginClass(const FName InPath)
+bool IsPluginDocumentation(const FName InPath)
 {
 	FString PathStr;
 	if (!GetUnrealContentRootFromInternalClassPath(InPath, PathStr))
@@ -102,7 +103,7 @@ bool IsPluginClass(const FName InPath)
 	return AssetViewUtils::IsPluginFolder(PathStr);
 }
 
-FContentBrowserItemData CreateClassFolderItem(
+FContentBrowserItemData CreateMarkdownFolderItem(
 	UContentBrowserDataSource* InOwnerDataSource, const FName InVirtualPath, FName InFolderPath, const bool bIsFromPlugin)
 {
 	static const FName GameRootPath = "/Documentation";
@@ -133,7 +134,7 @@ FContentBrowserItemData CreateClassFolderItem(
 		{ InFolderPath });
 }
 
-FContentBrowserItemData CreateClassFileItem(
+FContentBrowserItemData CreateMarkdownFileItem(
 	UContentBrowserDataSource* InOwnerDataSource,
 	const FName InVirtualPath,
 	FName InClassPath,
@@ -149,7 +150,7 @@ FContentBrowserItemData CreateClassFileItem(
 		{ InClassPath });
 }
 
-TSharedPtr<const FMarkdownContentBrowserFolderItemDataPayload> GetClassFolderItemPayload(
+TSharedPtr<const FMarkdownContentBrowserFolderItemDataPayload> GetMarkdownFolderItemPayload(
 	const UContentBrowserDataSource* InOwnerDataSource, const FContentBrowserItemData& InItem)
 {
 	if (InItem.GetOwnerDataSource() == InOwnerDataSource && InItem.IsFolder())
@@ -159,7 +160,7 @@ TSharedPtr<const FMarkdownContentBrowserFolderItemDataPayload> GetClassFolderIte
 	return nullptr;
 }
 
-TSharedPtr<const FMarkdownContentBrowserFileItemDataPayload> GetClassFileItemPayload(const UContentBrowserDataSource* InOwnerDataSource, const FContentBrowserItemData& InItem)
+TSharedPtr<const FMarkdownContentBrowserFileItemDataPayload> GetMarkdownFileItemPayload(const UContentBrowserDataSource* InOwnerDataSource, const FContentBrowserItemData& InItem)
 {
 	if (InItem.GetOwnerDataSource() == InOwnerDataSource && InItem.IsFile())
 	{
@@ -168,11 +169,11 @@ TSharedPtr<const FMarkdownContentBrowserFileItemDataPayload> GetClassFileItemPay
 	return nullptr;
 }
 
-void EnumerateClassFolderItemPayloads(const UContentBrowserDataSource* InOwnerDataSource, TArrayView<const FContentBrowserItemData> InItems, TFunctionRef<bool(const TSharedRef<const FMarkdownContentBrowserFolderItemDataPayload>&)> InFolderPayloadCallback)
+void EnumerateMarkdownFolderItemPayloads(const UContentBrowserDataSource* InOwnerDataSource, TArrayView<const FContentBrowserItemData> InItems, TFunctionRef<bool(const TSharedRef<const FMarkdownContentBrowserFolderItemDataPayload>&)> InFolderPayloadCallback)
 {
 	for (const FContentBrowserItemData& Item : InItems)
 	{
-		if (TSharedPtr<const FMarkdownContentBrowserFolderItemDataPayload> FolderPayload = GetClassFolderItemPayload(InOwnerDataSource, Item))
+		if (TSharedPtr<const FMarkdownContentBrowserFolderItemDataPayload> FolderPayload = GetMarkdownFolderItemPayload(InOwnerDataSource, Item))
 		{
 			if (!InFolderPayloadCallback(FolderPayload.ToSharedRef()))
 			{
@@ -182,11 +183,11 @@ void EnumerateClassFolderItemPayloads(const UContentBrowserDataSource* InOwnerDa
 	}
 }
 
-void EnumerateClassFileItemPayloads(const UContentBrowserDataSource* InOwnerDataSource, TArrayView<const FContentBrowserItemData> InItems, TFunctionRef<bool(const TSharedRef<const FMarkdownContentBrowserFileItemDataPayload>&)> InClassPayloadCallback)
+void EnumerateMarkdownFileItemPayloads(const UContentBrowserDataSource* InOwnerDataSource, TArrayView<const FContentBrowserItemData> InItems, TFunctionRef<bool(const TSharedRef<const FMarkdownContentBrowserFileItemDataPayload>&)> InClassPayloadCallback)
 {
 	for (const FContentBrowserItemData& Item : InItems)
 	{
-		if (TSharedPtr<const FMarkdownContentBrowserFileItemDataPayload> ClassPayload = GetClassFileItemPayload(InOwnerDataSource, Item))
+		if (TSharedPtr<const FMarkdownContentBrowserFileItemDataPayload> ClassPayload = GetMarkdownFileItemPayload(InOwnerDataSource, Item))
 		{
 			if (!InClassPayloadCallback(ClassPayload.ToSharedRef()))
 			{
@@ -196,11 +197,11 @@ void EnumerateClassFileItemPayloads(const UContentBrowserDataSource* InOwnerData
 	}
 }
 
-void EnumerateClassItemPayloads(const UContentBrowserDataSource* InOwnerDataSource, TArrayView<const FContentBrowserItemData> InItems, TFunctionRef<bool(const TSharedRef<const FMarkdownContentBrowserFolderItemDataPayload>&)> InFolderPayloadCallback, TFunctionRef<bool(const TSharedRef<const FMarkdownContentBrowserFileItemDataPayload>&)> InClassPayloadCallback)
+void EnumerateMarkdownItemPayloads(const UContentBrowserDataSource* InOwnerDataSource, TArrayView<const FContentBrowserItemData> InItems, TFunctionRef<bool(const TSharedRef<const FMarkdownContentBrowserFolderItemDataPayload>&)> InFolderPayloadCallback, TFunctionRef<bool(const TSharedRef<const FMarkdownContentBrowserFileItemDataPayload>&)> InClassPayloadCallback)
 {
 	for (const FContentBrowserItemData& Item : InItems)
 	{
-		if (TSharedPtr<const FMarkdownContentBrowserFolderItemDataPayload> FolderPayload = GetClassFolderItemPayload(InOwnerDataSource, Item))
+		if (TSharedPtr<const FMarkdownContentBrowserFolderItemDataPayload> FolderPayload = GetMarkdownFolderItemPayload(InOwnerDataSource, Item))
 		{
 			if (!InFolderPayloadCallback(FolderPayload.ToSharedRef()))
 			{
@@ -208,7 +209,7 @@ void EnumerateClassItemPayloads(const UContentBrowserDataSource* InOwnerDataSour
 			}
 		}
 
-		if (TSharedPtr<const FMarkdownContentBrowserFileItemDataPayload> ClassPayload = GetClassFileItemPayload(InOwnerDataSource, Item))
+		if (TSharedPtr<const FMarkdownContentBrowserFileItemDataPayload> ClassPayload = GetMarkdownFileItemPayload(InOwnerDataSource, Item))
 		{
 			if (!InClassPayloadCallback(ClassPayload.ToSharedRef()))
 			{
@@ -228,15 +229,15 @@ void SetOptionalErrorMessage(FText* OutErrorMsg, FText InErrorMsg)
 
 bool CanEditItem(const UContentBrowserDataSource* InOwnerDataSource, const FContentBrowserItemData& InItem, FText* OutErrorMsg)
 {
-	if (TSharedPtr<const FMarkdownContentBrowserFileItemDataPayload> ClassPayload = GetClassFileItemPayload(InOwnerDataSource, InItem))
+	if (TSharedPtr<const FMarkdownContentBrowserFileItemDataPayload> ClassPayload = GetMarkdownFileItemPayload(InOwnerDataSource, InItem))
 	{
-		return CanEditClassFileItem(*ClassPayload, OutErrorMsg);
+		return CanEditMarkdownFileItem(*ClassPayload, OutErrorMsg);
 	}
 
 	return false;
 }
 
-bool CanEditClassFileItem(const FMarkdownContentBrowserFileItemDataPayload& InClassPayload, FText* OutErrorMsg)
+bool CanEditMarkdownFileItem(const FMarkdownContentBrowserFileItemDataPayload& InClassPayload, FText* OutErrorMsg)
 {
 	return true;
 }
@@ -245,29 +246,32 @@ bool EditItems(IAssetTypeActions* InClassTypeActions, const UContentBrowserDataS
 {
 	TArray<TSharedRef<const FMarkdownContentBrowserFileItemDataPayload>, TInlineAllocator<16>> ClassPayloads;
 
-	EnumerateClassFileItemPayloads(InOwnerDataSource, InItems, [&ClassPayloads](const TSharedRef<const FMarkdownContentBrowserFileItemDataPayload>& InClassPayload)
+	EnumerateMarkdownFileItemPayloads(InOwnerDataSource, InItems, [&ClassPayloads](const TSharedRef<const FMarkdownContentBrowserFileItemDataPayload>& InClassPayload)
 	{
 		ClassPayloads.Add(InClassPayload);
 		return true;
 	});
 
-	return EditClassFileItems(InClassTypeActions, ClassPayloads);
+	return EditMarkdownFileItems(InClassTypeActions, ClassPayloads);
 }
 
-bool EditClassFileItems(IAssetTypeActions* InClassTypeActions, TArrayView<const TSharedRef<const FMarkdownContentBrowserFileItemDataPayload>> InClassPayloads)
+bool EditMarkdownFileItems(IAssetTypeActions* InMarkdownTypeActions, TArrayView<const TSharedRef<const FMarkdownContentBrowserFileItemDataPayload>> InMarkdownPayloads)
 {
-	TArray<UObject*> ClassList;
-	for (const TSharedRef<const FMarkdownContentBrowserFileItemDataPayload>& ClassPayload : InClassPayloads)
+	TArray<UObject*> MarkdownAssets;
+	for (const TSharedRef<const FMarkdownContentBrowserFileItemDataPayload>& MarkdownPayload : InMarkdownPayloads)
 	{
-		/*if (FName ClassPtr = ClassPayload->GetClass())
+		if (UMarkdownFile* MarkdownFile = MarkdownPayload->GetMDFile())
 		{
-			ClassList.Add(ClassPtr);
-		}*/
+			if (UMarkdownAsset* MarkdownAsset = MarkdownFile->GetMarkdownAsset())
+			{
+				MarkdownAssets.Add(MarkdownAsset);
+			}
+		}
 	}
 
-	if (ClassList.Num() > 0)
+	if (MarkdownAssets.Num() > 0)
 	{
-		InClassTypeActions->OpenAssetEditor(ClassList);
+		InMarkdownTypeActions->OpenAssetEditor(MarkdownAssets);
 		return true;
 	}
 
@@ -276,15 +280,15 @@ bool EditClassFileItems(IAssetTypeActions* InClassTypeActions, TArrayView<const 
 
 bool UpdateItemThumbnail(const UContentBrowserDataSource* InOwnerDataSource, const FContentBrowserItemData& InItem, FAssetThumbnail& InThumbnail)
 {
-	if (TSharedPtr<const FMarkdownContentBrowserFileItemDataPayload> ClassPayload = GetClassFileItemPayload(InOwnerDataSource, InItem))
+	if (TSharedPtr<const FMarkdownContentBrowserFileItemDataPayload> ClassPayload = GetMarkdownFileItemPayload(InOwnerDataSource, InItem))
 	{
-		return UpdateClassFileItemThumbnail(*ClassPayload, InThumbnail);
+		return UpdateMarkdownFileItemThumbnail(*ClassPayload, InThumbnail);
 	}
 
 	return false;
 }
 
-bool UpdateClassFileItemThumbnail(const FMarkdownContentBrowserFileItemDataPayload& InClassPayload, FAssetThumbnail& InThumbnail)
+bool UpdateMarkdownFileItemThumbnail(const FMarkdownContentBrowserFileItemDataPayload& InClassPayload, FAssetThumbnail& InThumbnail)
 {
 	InClassPayload.UpdateThumbnail(InThumbnail);
 	return true;
@@ -292,9 +296,9 @@ bool UpdateClassFileItemThumbnail(const FMarkdownContentBrowserFileItemDataPaylo
 
 bool AppendItemReference(const UContentBrowserDataSource* InOwnerDataSource, const FContentBrowserItemData& InItem, FString& InOutStr)
 {
-	if (TSharedPtr<const FMarkdownContentBrowserFileItemDataPayload> ClassPayload = GetClassFileItemPayload(InOwnerDataSource, InItem))
+	if (TSharedPtr<const FMarkdownContentBrowserFileItemDataPayload> ClassPayload = GetMarkdownFileItemPayload(InOwnerDataSource, InItem))
 	{
-		return AppendClassFileItemReference(*ClassPayload, InOutStr);
+		return AppendMarkdownFileItemReference(*ClassPayload, InOutStr);
 	}
 
 	return false;
@@ -302,7 +306,7 @@ bool AppendItemReference(const UContentBrowserDataSource* InOwnerDataSource, con
 
 bool AppendItemObjectPath(const UContentBrowserDataSource* InOwnerDataSource, const FContentBrowserItemData& InItem, FString& InOutStr)
 {
-	if (TSharedPtr<const FMarkdownContentBrowserFileItemDataPayload> ClassPayload = GetClassFileItemPayload(InOwnerDataSource, InItem))
+	if (TSharedPtr<const FMarkdownContentBrowserFileItemDataPayload> ClassPayload = GetMarkdownFileItemPayload(InOwnerDataSource, InItem))
 	{
 		return AppendObjectPathFileItemReference(*ClassPayload, InOutStr);
 	}
@@ -312,7 +316,7 @@ bool AppendItemObjectPath(const UContentBrowserDataSource* InOwnerDataSource, co
 
 bool AppendItemPackageName(const UContentBrowserDataSource* InOwnerDataSource, const FContentBrowserItemData& InItem, FString& InOutStr)
 {
-	if (TSharedPtr<const FMarkdownContentBrowserFileItemDataPayload> ClassPayload = GetClassFileItemPayload(InOwnerDataSource, InItem))
+	if (TSharedPtr<const FMarkdownContentBrowserFileItemDataPayload> ClassPayload = GetMarkdownFileItemPayload(InOwnerDataSource, InItem))
 	{
 		return AppendPackageNameItemReference(*ClassPayload, InOutStr);
 	}
@@ -320,7 +324,7 @@ bool AppendItemPackageName(const UContentBrowserDataSource* InOwnerDataSource, c
 	return false;
 }
 
-bool AppendClassFileItemReference(const FMarkdownContentBrowserFileItemDataPayload& InClassPayload, FString& InOutStr)
+bool AppendMarkdownFileItemReference(const FMarkdownContentBrowserFileItemDataPayload& InClassPayload, FString& InOutStr)
 {
 	if (InOutStr.Len() > 0)
 	{
@@ -356,20 +360,20 @@ bool AppendPackageNameItemReference(const FMarkdownContentBrowserFileItemDataPay
 
 bool GetItemPhysicalPath(const UContentBrowserDataSource* InOwnerDataSource, const FContentBrowserItemData& InItem, FString& OutDiskPath)
 {
-	if (TSharedPtr<const FMarkdownContentBrowserFolderItemDataPayload> FolderPayload = GetClassFolderItemPayload(InOwnerDataSource, InItem))
+	if (TSharedPtr<const FMarkdownContentBrowserFolderItemDataPayload> FolderPayload = GetMarkdownFolderItemPayload(InOwnerDataSource, InItem))
 	{
-		return GetClassFolderItemPhysicalPath(*FolderPayload, OutDiskPath);
+		return GetMarkdownFolderItemPhysicalPath(*FolderPayload, OutDiskPath);
 	}
 
-	if (TSharedPtr<const FMarkdownContentBrowserFileItemDataPayload> ClassPayload = GetClassFileItemPayload(InOwnerDataSource, InItem))
+	if (TSharedPtr<const FMarkdownContentBrowserFileItemDataPayload> ClassPayload = GetMarkdownFileItemPayload(InOwnerDataSource, InItem))
 	{
-		return GetClassFileItemPhysicalPath(*ClassPayload, OutDiskPath);
+		return GetMarkdownFileItemPhysicalPath(*ClassPayload, OutDiskPath);
 	}
 
 	return false;
 }
 
-bool GetClassFolderItemPhysicalPath(const FMarkdownContentBrowserFolderItemDataPayload& InFolderPayload, FString& OutDiskPath)
+bool GetMarkdownFolderItemPhysicalPath(const FMarkdownContentBrowserFolderItemDataPayload& InFolderPayload, FString& OutDiskPath)
 {
 	/*const FString& FolderFilename = InFolderPayload.GetFilename();
 	if (!FolderFilename.IsEmpty())
@@ -381,7 +385,7 @@ bool GetClassFolderItemPhysicalPath(const FMarkdownContentBrowserFolderItemDataP
 	return false;
 }
 
-bool GetClassFileItemPhysicalPath(const FMarkdownContentBrowserFileItemDataPayload& InClassPayload, FString& OutDiskPath)
+bool GetMarkdownFileItemPhysicalPath(const FMarkdownContentBrowserFileItemDataPayload& InClassPayload, FString& OutDiskPath)
 {
 	/*const FString& ClassFilename = InClassPayload.GetFilename();
 	if (!ClassFilename.IsEmpty())
@@ -482,40 +486,40 @@ void GetGenericItemAttribute(const FName InTagKey, const FString& InTagValue, co
 
 bool GetItemAttribute(IAssetTypeActions* InClassTypeActions, const UContentBrowserDataSource* InOwnerDataSource, const FContentBrowserItemData& InItem, const bool InIncludeMetaData, const FName InAttributeKey, FContentBrowserItemDataAttributeValue& OutAttributeValue)
 {
-	if (TSharedPtr<const FMarkdownContentBrowserFolderItemDataPayload> FolderPayload = GetClassFolderItemPayload(InOwnerDataSource, InItem))
+	if (TSharedPtr<const FMarkdownContentBrowserFolderItemDataPayload> FolderPayload = GetMarkdownFolderItemPayload(InOwnerDataSource, InItem))
 	{
-		return GetClassFolderItemAttribute(*FolderPayload, InIncludeMetaData, InAttributeKey, OutAttributeValue);
+		return GetMarkdownFolderItemAttribute(*FolderPayload, InIncludeMetaData, InAttributeKey, OutAttributeValue);
 	}
 
-	if (TSharedPtr<const FMarkdownContentBrowserFileItemDataPayload> ClassPayload = GetClassFileItemPayload(InOwnerDataSource, InItem))
+	if (TSharedPtr<const FMarkdownContentBrowserFileItemDataPayload> ClassPayload = GetMarkdownFileItemPayload(InOwnerDataSource, InItem))
 	{
-		return GetClassFileItemAttribute(InClassTypeActions, *ClassPayload, InIncludeMetaData, InAttributeKey, OutAttributeValue);
+		return GetMarkdownFileItemAttribute(InClassTypeActions, *ClassPayload, InIncludeMetaData, InAttributeKey, OutAttributeValue);
 	}
 
 	return false;
 }
 
-bool GetClassFolderItemAttribute(const FMarkdownContentBrowserFolderItemDataPayload& InFolderPayload, const bool InIncludeMetaData, const FName InAttributeKey, FContentBrowserItemDataAttributeValue& OutAttributeValue)
+bool GetMarkdownFolderItemAttribute(const FMarkdownContentBrowserFolderItemDataPayload& InFolderPayload, const bool InIncludeMetaData, const FName InAttributeKey, FContentBrowserItemDataAttributeValue& OutAttributeValue)
 {
 	// Hard-coded attribute keys
 	{
 		if (InAttributeKey == ContentBrowserItemAttributes::ItemIsEngineContent)
 		{
-			const bool bIsEngineFolder = IsEngineClass(InFolderPayload.GetInternalPath());
+			const bool bIsEngineFolder = IsEngineDocumentation(InFolderPayload.GetInternalPath());
 			OutAttributeValue.SetValue(bIsEngineFolder);
 			return true;
 		}
 
 		if (InAttributeKey == ContentBrowserItemAttributes::ItemIsProjectContent)
 		{
-			const bool bIsProjectFolder = IsProjectClass(InFolderPayload.GetInternalPath());
+			const bool bIsProjectFolder = IsProjectDocumentation(InFolderPayload.GetInternalPath());
 			OutAttributeValue.SetValue(bIsProjectFolder);
 			return true;
 		}
 
 		if (InAttributeKey == ContentBrowserItemAttributes::ItemIsPluginContent)
 		{
-			const bool bIsPluginFolder = IsPluginClass(InFolderPayload.GetInternalPath());
+			const bool bIsPluginFolder = IsPluginDocumentation(InFolderPayload.GetInternalPath());
 			OutAttributeValue.SetValue(bIsPluginFolder);
 			return true;
 		}
@@ -524,7 +528,7 @@ bool GetClassFolderItemAttribute(const FMarkdownContentBrowserFolderItemDataPayl
 	return false;
 }
 
-bool GetClassFileItemAttribute(IAssetTypeActions* InClassTypeActions, const FMarkdownContentBrowserFileItemDataPayload& InClassPayload, const bool InIncludeMetaData, const FName InAttributeKey, FContentBrowserItemDataAttributeValue& OutAttributeValue)
+bool GetMarkdownFileItemAttribute(IAssetTypeActions* InClassTypeActions, const FMarkdownContentBrowserFileItemDataPayload& InClassPayload, const bool InIncludeMetaData, const FName InAttributeKey, FContentBrowserItemDataAttributeValue& OutAttributeValue)
 {
 	// Hard-coded attribute keys
 	{
@@ -564,21 +568,21 @@ bool GetClassFileItemAttribute(IAssetTypeActions* InClassTypeActions, const FMar
 
 		if (InAttributeKey == ContentBrowserItemAttributes::ItemIsEngineContent)
 		{
-			const bool bIsEngineFolder = IsEngineClass(InClassPayload.GetInternalPath());
+			const bool bIsEngineFolder = IsEngineDocumentation(InClassPayload.GetInternalPath());
 			OutAttributeValue.SetValue(bIsEngineFolder);
 			return true;
 		}
 
 		if (InAttributeKey == ContentBrowserItemAttributes::ItemIsProjectContent)
 		{
-			const bool bIsProjectFolder = IsProjectClass(InClassPayload.GetInternalPath());
+			const bool bIsProjectFolder = IsProjectDocumentation(InClassPayload.GetInternalPath());
 			OutAttributeValue.SetValue(bIsProjectFolder);
 			return true;
 		}
 
 		if (InAttributeKey == ContentBrowserItemAttributes::ItemIsPluginContent)
 		{
-			const bool bIsPluginFolder = IsPluginClass(InClassPayload.GetInternalPath());
+			const bool bIsPluginFolder = IsPluginDocumentation(InClassPayload.GetInternalPath());
 			OutAttributeValue.SetValue(bIsPluginFolder);
 			return true;
 		}
@@ -609,15 +613,15 @@ bool GetClassFileItemAttribute(IAssetTypeActions* InClassTypeActions, const FMar
 
 bool GetItemAttributes(const UContentBrowserDataSource* InOwnerDataSource, const FContentBrowserItemData& InItem, const bool InIncludeMetaData, FContentBrowserItemDataAttributeValues& OutAttributeValues)
 {
-	if (TSharedPtr<const FMarkdownContentBrowserFileItemDataPayload> ClassPayload = GetClassFileItemPayload(InOwnerDataSource, InItem))
+	if (TSharedPtr<const FMarkdownContentBrowserFileItemDataPayload> ClassPayload = GetMarkdownFileItemPayload(InOwnerDataSource, InItem))
 	{
-		return GetClassFileItemAttributes(*ClassPayload, InIncludeMetaData, OutAttributeValues);
+		return GetMarkdownFileItemAttributes(*ClassPayload, InIncludeMetaData, OutAttributeValues);
 	}
 
 	return false;
 }
 
-bool GetClassFileItemAttributes(const FMarkdownContentBrowserFileItemDataPayload& InClassPayload, const bool InIncludeMetaData, FContentBrowserItemDataAttributeValues& OutAttributeValues)
+bool GetMarkdownFileItemAttributes(const FMarkdownContentBrowserFileItemDataPayload& InClassPayload, const bool InIncludeMetaData, FContentBrowserItemDataAttributeValues& OutAttributeValues)
 {
 	// Hard-coded attribute keys
 	{

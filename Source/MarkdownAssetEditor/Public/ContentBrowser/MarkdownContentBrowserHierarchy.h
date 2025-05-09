@@ -1,6 +1,9 @@
 #pragma once
+
 #include "MarkdownContentBrowserHierarchy.generated.h"
 
+
+class UMarkdownAsset;
 
 UCLASS()
 class MARKDOWNASSETEDITOR_API UMarkdownFile : public UObject
@@ -8,6 +11,15 @@ class MARKDOWNASSETEDITOR_API UMarkdownFile : public UObject
 	GENERATED_BODY()
 public:
 	FName FilePath;
+
+	UPROPERTY()
+	UMarkdownAsset* Asset;
+
+	UFUNCTION()
+	UMarkdownAsset* GetMarkdownAsset();
+
+	UFUNCTION()
+	void OnAssetChanged();
 };
 
 struct FMarkdownContentBrowserHierarchyNode
@@ -25,6 +37,8 @@ struct FMarkdownContentBrowserHierarchyNode
 	TSet<UMarkdownFile*> MDFiles;
 
 	TMap<FName, TSharedPtr<FMarkdownContentBrowserHierarchyNode>> Children;
+
+	void DestroyUObjects();
 };
 
 class FMarkdownContentBrowserHierarchy

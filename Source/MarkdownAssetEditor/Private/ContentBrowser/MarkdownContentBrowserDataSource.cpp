@@ -7,10 +7,12 @@
 #if UE_F_NAME_PERMISSION_LIST
 #include "Misc/NamePermissionList.h"
 #endif
+#include "AssetToolsModule.h"
 #include "ContentBrowserDataMenuContexts.h"
 #include "ToolMenuDelegates.h"
 #include "ToolMenus.h"
 #include "ContentBrowser/MarkdownNewFileContextMenu.h"
+#include "MarkdownAsset.h"
 #include "ContentBrowser/MarkdownContentBrowserFolderItemDataPayload.h"
 #define UE_ASSET_DATA_GET_SOFT_OBJECT_PATH 0
 #define UE_U_CONTENT_BROWSER_DATA_SOURCE_NOTIFY_ITEM_DATA_REFRESHED 0
@@ -489,7 +491,12 @@ bool UMarkdownContentBrowserDataSource::CanEditItem(const FContentBrowserItemDat
 bool UMarkdownContentBrowserDataSource::EditItem(const FContentBrowserItemData& InItem)
 {
 	const auto ItemDataPayload = GetFileItemDataPayload(InItem);
-
+	{
+		static const FName NAME_AssetTools = "AssetTools";
+		auto AssetTools = &FModuleManager::GetModuleChecked<FAssetToolsModule>(NAME_AssetTools).Get();
+		AssetTools->OpenEditorForAssets({ItemDataPayload->GetMDFile()->GetMarkdownAsset()});
+		return true;
+	}
 	return ItemDataPayload
 		       ? FSourceCodeNavigation::OpenSourceFile(ItemDataPayload->GetInternalPath().ToString())
 		       : false;
@@ -736,6 +743,7 @@ FContentBrowserItemData UMarkdownContentBrowserDataSource::CreateFolderItem(cons
 
 FContentBrowserItemData UMarkdownContentBrowserDataSource::CreateFileItem(UMarkdownFile* InFile)
 {
+	if (InFile)
 	return FContentBrowserItemData(this,
 	                               EContentBrowserItemFlags::Type_File | EContentBrowserItemFlags::Category_Misc,
 	                               *GetVirtualPath(*InFile->GetName()),
