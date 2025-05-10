@@ -6,6 +6,7 @@
 #include "UObject/Object.h"
 #include "UObject/ObjectMacros.h"
 #include "UObject/ObjectSaveContext.h"
+#include "UObject/PropertyAccessUtil.h"
 
 #include "MarkdownAsset.generated.h"
 
@@ -29,13 +30,19 @@ public:
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override
 	{
 		Super::PostEditChangeProperty(PropertyChangedEvent);
-		OnChanged.Execute();
+		if (OnChanged.IsBound())
+		{
+			OnChanged.Execute();
+		}
 	}
 
 	virtual void PostSaveRoot(FObjectPostSaveRootContext ObjectSaveContext) override
 	{
 		Super::PostSaveRoot(ObjectSaveContext);
-		OnChanged.Execute();
+		if (OnChanged.IsBound())
+		{
+			OnChanged.Execute();
+		}
 	}
 #endif
 };

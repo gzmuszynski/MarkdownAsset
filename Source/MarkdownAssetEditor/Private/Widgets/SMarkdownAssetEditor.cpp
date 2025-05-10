@@ -54,7 +54,15 @@ void SMarkdownAssetEditor::Construct( const FArguments& InArgs, UMarkdownAsset* 
 	// setup binding
 	UMarkdownBinding* Binding = NewObject<UMarkdownBinding>();
 	Binding->Text = MarkdownAsset->Text;
-	Binding->OnSetText.AddLambda( [this, Binding]() { MarkdownAsset->MarkPackageDirty(); MarkdownAsset->Text = Binding->GetText(); });
+	Binding->OnSetText.AddLambda( [this, Binding]()
+	{
+		MarkdownAsset->MarkPackageDirty();
+		MarkdownAsset->Text = Binding->GetText();
+		if(MarkdownAsset->OnChanged.IsBound())
+		{
+			MarkdownAsset->OnChanged.Execute();
+		}
+	});
 	WebBrowser->BindUObject( TEXT( "MarkdownBinding" ), Binding, true );
 
 	ChildSlot

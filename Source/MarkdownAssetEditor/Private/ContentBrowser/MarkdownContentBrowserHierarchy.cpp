@@ -6,6 +6,14 @@
 
 #define DYNAMIC_ROOT_VIRTUAL_PATH FString(TEXT("/All")) / DYNAMIC_ROOT_INTERNAL_PATH
 
+UMarkdownFile::~UMarkdownFile()
+{
+	if (Asset->IsValidLowLevel())
+	{
+		Asset->MarkAsGarbage();
+	}
+}
+
 UMarkdownAsset* UMarkdownFile::GetMarkdownAsset()
 {
 	if (Asset)
@@ -15,7 +23,7 @@ UMarkdownAsset* UMarkdownFile::GetMarkdownAsset()
 	FString FullPath = FPaths::ProjectDir() + DYNAMIC_ROOT_INTERNAL_PATH + FilePath.ToString();
 	if (FPaths::FileExists(FullPath))
 	{
-		Asset = NewObject<UMarkdownAsset>(this);
+		Asset = NewObject<UMarkdownAsset>(this, FName(GetName()+"_C"), RF_Standalone);
 		FString String;
 		
 		FFileHelper::LoadFileToString(String, *FullPath);

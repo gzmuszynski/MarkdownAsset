@@ -9,6 +9,8 @@ UCLASS()
 class MARKDOWNASSETEDITOR_API UMarkdownFile : public UObject
 {
 	GENERATED_BODY()
+
+	~UMarkdownFile();
 public:
 	FName FilePath;
 
